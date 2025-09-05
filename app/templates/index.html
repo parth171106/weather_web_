@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .search-form {
+            text-align: center;
+            margin: 30px 0;
+        }
+        input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .weather-info {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #e9f7ff;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather App</h1>
+        <div class="search-form">
+            <input type="text" id="cityInput" placeholder="Enter city name" value="London">
+            <button onclick="getWeather()">Get Weather</button>
+        </div>
+        <div id="weatherInfo" class="weather-info">
+            <h2 id="cityName"></h2>
+            <p><strong>Temperature:</strong> <span id="temperature"></span>°C</p>
+            <p><strong>Description:</strong> <span id="description"></span></p>
+            <p><strong>Humidity:</strong> <span id="humidity"></span>%</p>
+            <p><strong>Wind Speed:</strong> <span id="windSpeed"></span> m/s</p>
+        </div>
+    </div>
+
+    <script>
+        async function getWeather() {
+            const city = document.getElementById('cityInput').value;
+            const weatherInfo = document.getElementById('weatherInfo');
+            
+            try {
+                const response = await fetch(`/api/weather?city=${encodeURIComponent(city)}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('cityName').textContent = data.city;
+                    document.getElementById('temperature').textContent = data.temperature;
+                    document.getElementById('description').textContent = data.description;
+                    document.getElementById('humidity').textContent = data.humidity;
+                    document.getElementById('windSpeed').textContent = data.wind_speed;
+                    weatherInfo.style.display = 'block';
+                } else {
+                    if (data.instructions) {
+                        alert('Error: ' + data.error + '\n\n' + data.instructions);
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                }
+            } catch (error) {
+                alert('Error fetching weather data: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
