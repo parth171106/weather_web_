@@ -1,0 +1,184 @@
+<style>
+    .weather-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(135deg, #74b9ff, #0984e3);
+        color: white;
+    }
+    .weather-icon {
+        font-size: 4rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    .weather-temp {
+        font-size: 3rem;
+        font-weight: bold;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    .weather-detail {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+    }
+    .search-container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Search Section -->
+            <div class="search-container p-4 mb-4">
+                <h2 class="text-center mb-4">
+                    <i class="fas fa-search text-primary"></i> Search Weather
+                </h2>
+                <form id="weatherForm" onsubmit="getWeather(event)">
+                    <div class="input-group input-group-lg">
+                        <input type="text" 
+                               class="form-control" 
+                               id="cityInput" 
+                               placeholder="Enter city name (e.g., London, New York)"
+                               required>
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i> Get Weather
+                        </button>
+                    </div>
+                    <small class="form-text text-muted mt-2">
+                        You can also include country code (e.g., "London,UK" or "New York,US")
+                    </small>
+                </form>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="text-center d-none">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Fetching weather data...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="alert alert-danger d-none" role="alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="errorText"></span>
+            </div>
+
+            <!-- Weather Display -->
+            <div id="weatherDisplay" class="d-none">
+                <div class="weather-card p-4 mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-4 text-center">
+                            <div class="weather-icon">
+                                <i id="weatherIcon" class="fas fa-sun"></i>
+                            </div>
+                            <div class="weather-temp" id="temperature">--°</div>
+                        </div>
+                        <div class="col-md-8">
+                            <h3 id="cityName" class="mb-2">--</h3>
+                            <p id="weatherDescription" class="h5 mb-3">--</p>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="weather-detail p-3 mb-2">
+                                        <i class="fas fa-tint text-info"></i>
+                                        <strong>Humidity:</strong> <span id="humidity">--%</span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="weather-detail p-3 mb-2">
+                                        <i class="fas fa-wind text-success"></i>
+                                        <strong>Wind Speed:</strong> <span id="windSpeed">-- m/s</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="weather-detail p-3 mb-2">
+                                        <i class="fas fa-thermometer-half text-warning"></i>
+                                        <strong>Feels Like:</strong> <span id="feelsLike">--°</span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="weather-detail p-3 mb-2">
+                                        <i class="fas fa-gauge text-danger"></i>
+                                        <strong>Pressure:</strong> <span id="pressure">-- hPa</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Weather Info -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-sun text-warning"></i> Sun Times</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Sunrise:</strong> <span id="sunrise">--:--</span></p>
+                                <p><strong>Sunset:</strong> <span id="sunset">--:--</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-eye text-info"></i> Visibility</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Visibility:</strong> <span id="visibility">-- km</span></p>
+                                <p><strong>Cloudiness:</strong> <span id="clouds">--%</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weather Map Button -->
+                {% if current_user.is_authenticated %}
+                <div class="text-center mt-4">
+                    <button class="btn btn-info btn-lg" onclick="openWeatherMap()">
+                        <i class="fas fa-map"></i> View on Map
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Recent Searches -->
+            <div class="mt-5">
+                <h4><i class="fas fa-history"></i> Recent Searches</h4>
+                <div id="recentSearches" class="d-flex flex-wrap gap-2">
+                    <!-- Recent searches will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/weather.js') }}"></script>
+<script>
+    // Initialize weather page
+    document.addEventListener('DOMContentLoaded', function() {
+        loadRecentSearches();
+        
+        // Get user's location if available
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                getWeatherByCoords(position.coords.latitude, position.coords.longitude);
+            });
+        }
+    });
+
+    function openWeatherMap() {
+        const city = document.getElementById('cityName').textContent;
+        if (city && city !== '--') {
+            window.open(`/maps/weather?city=${encodeURIComponent(city)}`, '_blank');
+        }
+    }
+</script>

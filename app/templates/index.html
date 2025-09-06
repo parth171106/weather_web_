@@ -1,101 +1,513 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather App</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        .container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-        }
-        .search-form {
-            text-align: center;
-            margin: 30px 0;
-        }
-        input[type="text"] {
-            padding: 10px;
-            width: 300px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .weather-info {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #e9f7ff;
-            border-radius: 5px;
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Weather App</h1>
-        <div class="search-form">
-            <input type="text" id="cityInput" placeholder="Enter city name" value="London">
-            <button onclick="getWeather()">Get Weather</button>
-        </div>
-        <div id="weatherInfo" class="weather-info">
-            <h2 id="cityName"></h2>
-            <p><strong>Temperature:</strong> <span id="temperature"></span>°C</p>
-            <p><strong>Description:</strong> <span id="description"></span></p>
-            <p><strong>Humidity:</strong> <span id="humidity"></span>%</p>
-            <p><strong>Wind Speed:</strong> <span id="windSpeed"></span> m/s</p>
+{% block head %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, rgba(116, 185, 255, 0.1), rgba(9, 132, 227, 0.1));
+        border-radius: 20px;
+        padding: 4rem 2rem;
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .feature-card {
+        height: 100%;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #3498db;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .quick-weather {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .weather-showcase {
+        background: linear-gradient(135deg, #74b9ff, #0984e3);
+        color: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 3rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold text-primary mb-4">
+                    <i class="fas fa-cloud-sun"></i> Weather Web App
+                </h1>
+                <p class="lead mb-4">
+                    Get accurate, real-time weather information for any location worldwide. 
+                    Stay informed with detailed forecasts, interactive maps, and personalized weather updates.
+                </p>
+                <div class="d-flex gap-3 justify-content-center justify-content-lg-start">
+                    <a href="{{ url_for('core.weather') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-search"></i> Check Weather
+                    </a>
+                    {% if not current_user.is_authenticated %}
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-user-plus"></i> Sign Up Free
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="weather-showcase">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 text-center">
+                            <div class="display-1">
+                                <i class="fas fa-sun"></i>
+                            </div>
+                            <h3>22°C</h3>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>London, UK</h5>
+                            <p>Sunny and Clear</p>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <small>Humidity</small>
+                                    <div><strong>65%</strong></div>
+                                </div>
+                                <div class="col-6">
+                                    <small>Wind</small>
+                                    <div><strong>5 m/s</strong></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script>
-        async function getWeather() {
-            const city = document.getElementById('cityInput').value;
-            const weatherInfo = document.getElementById('weatherInfo');
-            
-            try {
-                const response = await fetch(`/api/weather?city=${encodeURIComponent(city)}`);
-                const data = await response.json();
-                
-                if (response.ok) {
-                    document.getElementById('cityName').textContent = data.city;
-                    document.getElementById('temperature').textContent = data.temperature;
-                    document.getElementById('description').textContent = data.description;
-                    document.getElementById('humidity').textContent = data.humidity;
-                    document.getElementById('windSpeed').textContent = data.wind_speed;
-                    weatherInfo.style.display = 'block';
-                } else {
-                    if (data.instructions) {
-                        alert('Error: ' + data.error + '\n\n' + data.instructions);
-                    } else {
-                        alert('Error: ' + data.error);
-                    }
-                }
-            } catch (error) {
-                alert('Error fetching weather data: ' + error.message);
-            }
+    <!-- Quick Weather Search -->
+    <div class="quick-weather mb-5">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="mb-3">
+                    <i class="fas fa-bolt text-warning"></i> Quick Weather Check
+                </h4>
+                <form onsubmit="quickWeatherSearch(event)" class="d-flex gap-2">
+                    <input type="text" 
+                           class="form-control" 
+                           id="quickCityInput"
+                           placeholder="Enter city name..."
+                           required>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+            <div class="col-md-4 text-center">
+                <button class="btn btn-outline-primary" onclick="getCurrentLocationWeather()">
+                    <i class="fas fa-location-arrow"></i> Use My Location
+                </button>
+            </div>
+        </div>
+        
+        <!-- Quick Weather Result -->
+        <div id="quickWeatherResult" class="mt-3 d-none">
+            <!-- Results will be populated here -->
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h2 class="fw-bold">Why Choose Our Weather App?</h2>
+            <p class="text-muted">Comprehensive weather information at your fingertips</p>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-globe-americas"></i>
+                    </div>
+                    <h5 class="card-title">Global Coverage</h5>
+                    <p class="card-text">
+                        Get weather data for any city worldwide with our comprehensive 
+                        global weather database powered by OpenWeatherMap.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h5 class="card-title">Real-time Updates</h5>
+                    <p class="card-text">
+                        Stay updated with real-time weather conditions, hourly forecasts, 
+                        and instant notifications for severe weather alerts.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-map"></i>
+                    </div>
+                    <h5 class="card-title">Interactive Maps</h5>
+                    <p class="card-text">
+                        Explore weather patterns with interactive maps showing temperature, 
+                        precipitation, clouds, and wind data layers.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h5 class="card-title">Mobile Friendly</h5>
+                    <p class="card-text">
+                        Responsive design that works perfectly on all devices - 
+                        desktop, tablet, and mobile for weather on the go.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h5 class="card-title">Personal Dashboard</h5>
+                    <p class="card-text">
+                        Create an account to save favorite locations, view weather history, 
+                        and get personalized weather recommendations.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h5 class="card-title">Reliable & Secure</h5>
+                    <p class="card-text">
+                        Built with security in mind, using encrypted connections 
+                        and reliable weather data sources for accurate information.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="row mb-5">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <h3 class="fw-bold">200K+</h3>
+                <p class="mb-0">Cities Covered</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <h3 class="fw-bold">99.9%</h3>
+                <p class="mb-0">Uptime</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <h3 class="fw-bold">24/7</h3>
+                <p class="mb-0">Real-time Updates</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <h3 class="fw-bold">Free</h3>
+                <p class="mb-0">Forever</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    {% if not current_user.is_authenticated %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 bg-primary text-white">
+                <div class="card-body text-center py-5">
+                    <h3 class="card-title">Ready to Get Started?</h3>
+                    <p class="card-text lead">
+                        Join thousands of users who trust our weather app for accurate forecasts and reliable updates.
+                    </p>
+                    <div class="d-flex gap-3 justify-content-center">
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg">
+                            <i class="fas fa-user-plus"></i> Create Free Account
+                        </a>
+                        <a href="{{ url_for('core.weather') }}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-play"></i> Try It Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 bg-success text-white">
+                <div class="card-body text-center py-5">
+                    <h3 class="card-title">Welcome back, {{ current_user.username }}!</h3>
+                    <p class="card-text lead">
+                        Ready to check the weather? Explore our features and stay updated with the latest conditions.
+                    </p>
+                    <div class="d-flex gap-3 justify-content-center">
+                        <a href="{{ url_for('core.weather') }}" class="btn btn-light btn-lg">
+                            <i class="fas fa-thermometer-half"></i> Check Weather
+                        </a>
+                        <a href="/maps/weather" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-map"></i> Weather Maps
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function quickWeatherSearch(event) {
+        event.preventDefault();
+        
+        const cityInput = document.getElementById('quickCityInput');
+        const city = cityInput.value.trim();
+        const resultDiv = document.getElementById('quickWeatherResult');
+        
+        if (!city) {
+            return;
         }
-    </script>
-</body>
-</html>
+        
+        // Show loading
+        resultDiv.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Getting weather data for ${city}...</p>
+            </div>
+        `;
+        resultDiv.classList.remove('d-none');
+        
+        try {
+            const response = await fetch(`/api/weather?city=${encodeURIComponent(city)}`);
+            const data = await response.json();
+            
+            if (response.ok) {
+                resultDiv.innerHTML = `
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h5 class="card-title">${data.city}</h5>
+                                    <div class="d-flex align-items-center">
+                                        <span class="h2 text-primary me-3">${Math.round(data.temperature)}°C</span>
+                                        <div>
+                                            <div style="text-transform: capitalize;">${data.description}</div>
+                                            <small class="text-muted">Feels like ${data.feels_like ? Math.round(data.feels_like) : 'N/A'}°C</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div><i class="fas fa-tint text-info"></i></div>
+                                            <small>Humidity</small>
+                                            <div><strong>${data.humidity}%</strong></div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div><i class="fas fa-wind text-success"></i></div>
+                                            <small>Wind</small>
+                                            <div><strong>${data.wind_speed} m/s</strong></div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div><i class="fas fa-gauge text-warning"></i></div>
+                                            <small>Pressure</small>
+                                            <div><strong>${data.pressure || 'N/A'} hPa</strong></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center mt-3">
+                                <a href="/weather?city=${encodeURIComponent(data.city)}" class="btn btn-primary">
+                                    <i class="fas fa-external-link-alt"></i> View Detailed Forecast
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        ${data.error || 'Unable to fetch weather data'}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Network error. Please check your connection and try again.
+                </div>
+            `;
+        }
+    }
+    
+    async function getCurrentLocationWeather() {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by this browser.');
+            return;
+        }
+        
+        const resultDiv = document.getElementById('quickWeatherResult');
+        
+        resultDiv.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Getting your location...</p>
+            </div>
+        `;
+        resultDiv.classList.remove('d-none');
+        
+        navigator.geolocation.getCurrentPosition(
+            async function(position) {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                
+                try {
+                    const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        document.getElementById('quickCityInput').value = data.city;
+                        // Trigger the quick weather search with the location data
+                        resultDiv.innerHTML = `
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <h5 class="card-title">
+                                                <i class="fas fa-location-arrow text-primary"></i> ${data.city}
+                                            </h5>
+                                            <div class="d-flex align-items-center">
+                                                <span class="h2 text-primary me-3">${Math.round(data.temperature)}°C</span>
+                                                <div>
+                                                    <div style="text-transform: capitalize;">${data.description}</div>
+                                                    <small class="text-muted">Your current location</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="row text-center">
+                                                <div class="col-4">
+                                                    <div><i class="fas fa-tint text-info"></i></div>
+                                                    <small>Humidity</small>
+                                                    <div><strong>${data.humidity}%</strong></div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div><i class="fas fa-wind text-success"></i></div>
+                                                    <small>Wind</small>
+                                                    <div><strong>${data.wind_speed} m/s</strong></div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div><i class="fas fa-gauge text-warning"></i></div>
+                                                    <small>Pressure</small>
+                                                    <div><strong>${data.pressure || 'N/A'} hPa</strong></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-center mt-3">
+                                        <a href="/weather?city=${encodeURIComponent(data.city)}" class="btn btn-primary">
+                                            <i class="fas fa-external-link-alt"></i> View Detailed Forecast
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                ${data.error || 'Unable to fetch weather data for your location'}
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Network error. Please try again.
+                        </div>
+                    `;
+                }
+            },
+            function(error) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Unable to get your location. Please enter a city name manually.
+                    </div>
+                `;
+            }
+        );
+    }
+    
+    // Auto-focus on quick search input
+    document.addEventListener('DOMContentLoaded', function() {
+        const quickInput = document.getElementById('quickCityInput');
+        if (quickInput) {
+            quickInput.focus();
+        }
+    });
+</script>
+{% endblock %}

@@ -75,3 +75,4 @@ The application will be available at `http://localhost:5000`
 ## License
 
 MIT License
+
